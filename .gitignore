@@ -1,0 +1,37 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# Docker volumes and data
+traccar/logs/*
+traccar/data/*
+!traccar/logs/.gitkeep
+!traccar/data/.gitkeep
+
+# MySQL data
+mysql-data/
+
+# Backup files
+*.sql
+backup/
+backups/
+
+# Build artifacts
+build/
+dist/
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

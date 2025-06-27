@@ -1,0 +1,44 @@
+FROM eclipse-temurin:17-jdk-jammy AS builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y git wget unzip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Clone and build Traccar backend
+RUN git clone https://github.com/traccar/traccar.git . && \
+    cp -r schema /tmp/schema && \
+    ./gradlew build -x test
+
+# Runtime stage
+FROM eclipse-temurin:17-jre-jammy
+
+WORKDIR /opt/traccar
+
+# Copy built JAR and dependencies from builder stage
+COPY --from=builder /build/target/tracker-server.jar ./tracker-server.jar
+COPY --from=builder /build/target/lib ./lib
+# Copy schema from the preserved location
+COPY --from=builder /tmp/schema ./schema
+COPY --from=builder /build/src/main/java/org/traccar/web ./web
+COPY --from=builder /build/templates ./templates
+
+# Download MySQL connector
+RUN apt-get update && \
+    apt-get install -y wget && \
+    mkdir -p lib && \
+    wget -qO lib/mysql-connector-j-8.0.33.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar && \
+    apt-get remove -y wget && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create necessary directories
+RUN mkdir -p conf logs data
+
+EXPOSE 8082 5000-5150
+
+ENTRYPOINT ["java"]
+CMD ["-Xms1g", "-Xmx1g", "-Djava.net.preferIPv4Stack=true", "-cp", "tracker-server.jar:lib/*", "org.traccar.Main", "conf/traccar.xml"]

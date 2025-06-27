@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key="database.driver">com.mysql.cj.jdbc.Driver</entry>
+    <entry key="database.url">jdbc:mysql://traccar-mysql:3306/traccar?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;autoReconnect=true&amp;serverTimezone=UTC</entry>
+    <entry key="database.user">traccar</entry>
+    <entry key="database.password">traccar_password</entry>
+    <entry key="database.changelog">./schema/changelog-master.xml</entry>
+    <entry key="database.ignoreUnknown">true</entry>
+    <entry key="database.changelog.databaseChangeLogLockTableName">databasechangeloglock</entry>
+    <entry key="database.changelog.databaseChangeLogTableName">databasechangelog</entry>
+    
+    <!-- Web Interface Configuration -->
+    <entry key="web.enable">true</entry>
+    <entry key="web.port">8082</entry>
+    <entry key="web.path">./web</entry>
+    <entry key="web.address">0.0.0.0</entry>
+    <entry key="web.origin">*</entry>
+    <entry key="web.url">http://traccar-frontend:3000</entry>
+    
+    <!-- Server Configuration -->
+    <entry key="server.timeout">120</entry>
+    <entry key="logger.enable">true</entry>
+    <entry key="logger.level">INFO</entry>
+    <entry key="logger.file">./logs/tracker-server.log</entry>
+</properties>

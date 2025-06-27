@@ -1,0 +1,91 @@
+services:
+  traccar-mysql:
+    image: mysql:8.0
+    container_name: traccar-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-traccar}
+      MYSQL_USER: ${MYSQL_USER:-traccar}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-traccar_password}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    command: >
+      --default-authentication-plugin=caching_sha2_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    networks:
+      - traccar-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 30s
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: traccar-phpmyadmin
+    environment:
+      PMA_HOST: traccar-mysql
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER:-traccar}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-traccar_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    depends_on:
+      traccar-mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - traccar-network
+
+  traccar-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: traccar-backend
+    hostname: traccar-backend
+    depends_on:
+      traccar-mysql:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8082}:8082"
+      - "5000-5150:5000-5150"
+      - "5000-5150:5000-5150/udp"
+    volumes:
+      - ./traccar/logs:/opt/traccar/logs:rw
+      - ./traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+      - ./traccar/data:/opt/traccar/data:rw
+    restart: unless-stopped
+    networks:
+      - traccar-network
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx1g -Djava.net.preferIPv4Stack=true
+
+  traccar-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: traccar-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - traccar-backend
+    restart: unless-stopped
+    networks:
+      - traccar-network
+    environment:
+      - REACT_APP_API_URL=${TRACCAR_WEB_URL:-http://localhost:8082}
+
+volumes:
+  mysql_data:
+
+networks:
+  traccar-network:
+    driver: bridge
