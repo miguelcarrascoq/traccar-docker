@@ -40,6 +40,17 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Function to check docker compose (handles both docker-compose and docker compose)
+docker_compose_cmd() {
+    if command_exists docker-compose; then
+        echo "docker-compose"
+    elif docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+    else
+        echo ""
+    fi
+}
+
 # Select deployment mode
 echo -e "${GREEN}� Deployment Mode Selection${NC}"
 echo "1) Local Development (localhost, no SSL)"
@@ -115,16 +126,21 @@ else
     echo -e "${GREEN}✅ Docker already installed${NC}"
 fi
 
-if ! command_exists docker-compose; then
+# Check Docker Compose
+DOCKER_COMPOSE_CMD=$(docker_compose_cmd)
+if [ -z "$DOCKER_COMPOSE_CMD" ]; then
     echo -e "${BLUE}Installing Docker Compose...${NC}"
     if [[ "$OSTYPE" == "darwin"* ]]; then
         echo -e "${YELLOW}Docker Compose should be included with Docker Desktop${NC}"
+        echo -e "${YELLOW}Please restart Docker Desktop and try again${NC}"
+        exit 1
     else
         sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
+        DOCKER_COMPOSE_CMD="docker-compose"
     fi
 else
-    echo -e "${GREEN}✅ Docker Compose already installed${NC}"
+    echo -e "${GREEN}✅ Docker Compose available as: $DOCKER_COMPOSE_CMD${NC}"
 fi
 
 if ! command_exists git && [ "$DEPLOYMENT_MODE" = "production" ]; then
@@ -170,7 +186,7 @@ if [ "$DEPLOYMENT_MODE" = "production" ]; then
     sudo apt update && sudo apt upgrade -y
     
     # Create production docker-compose override
-    cat > docker-compose.prod.yml << EOF
+    cat > docker-compose.prod.yml << 'EOF'
 version: '3.8'
 
 services:
@@ -214,9 +230,11 @@ services:
     networks:
       - traccar-network
     environment:
-      - REACT_APP_API_URL=https://$DOMAIN
+      - REACT_APP_API_URL=https://${DOMAIN}
 
 volumes:
+  traccar_web:
+EOF
     # Create nginx production config
     mkdir -p nginx
     cat > nginx/nginx.prod.conf << EOF
@@ -235,7 +253,7 @@ http {
     add_header Referrer-Policy "strict-origin-when-cross-origin";
 
     # Rate limiting
-    limit_req_zone \\\$binary_remote_addr zone=api:10m rate=10r/s;
+    limit_req_zone \$binary_remote_addr zone=api:10m rate=10r/s;
 
     # HTTP to HTTPS redirect
     server {
@@ -247,7 +265,7 @@ http {
         }
         
         location / {
-            return 301 https://\\\$server_name\\\$request_uri;
+            return 301 https://\$server_name\$request_uri;
         }
     }
 
@@ -273,26 +291,26 @@ http {
 
         # Frontend
         location / {
-            try_files \\\$uri \\\$uri/ /index.html;
+            try_files \$uri \$uri/ /index.html;
         }
 
         # API proxy
         location /api/ {
             limit_req zone=api burst=20 nodelay;
             proxy_pass http://traccar-backend:8082/api/;
-            proxy_set_header Host \\\$host;
-            proxy_set_header X-Real-IP \\\$remote_addr;
-            proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \\\$scheme;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
         }
 
         # phpMyAdmin
         location /phpmyadmin/ {
             proxy_pass http://traccar-phpmyadmin/;
-            proxy_set_header Host \\\$host;
-            proxy_set_header X-Real-IP \\\$remote_addr;
-            proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \\\$scheme;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
         }
     }
 }
@@ -301,101 +319,101 @@ EOF
     # Create directories for SSL
     mkdir -p certbot/conf certbot/www
 
-    echo -e "\${GREEN}🚀 Starting Production Services\${NC}"
+    echo -e "${GREEN}🚀 Starting Production Services${NC}"
     
     # Use base docker-compose + production overrides
     COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
     
     # Start services
-    echo -e "\${BLUE}Starting database...\${NC}"
-    docker-compose \$COMPOSE_FILES up -d traccar-mysql
+    echo -e "${BLUE}Starting database...${NC}"
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d traccar-mysql
     
-    echo -e "\${BLUE}Waiting for database to be ready...\${NC}"
+    echo -e "${BLUE}Waiting for database to be ready...${NC}"
     sleep 30
     
-    echo -e "\${BLUE}Building and starting backend and frontend...\${NC}"
-    docker-compose \$COMPOSE_FILES up -d traccar-backend traccar-frontend phpmyadmin
+    echo -e "${BLUE}Building and starting backend and frontend...${NC}"
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d traccar-backend traccar-frontend phpmyadmin
     
-    echo -e "\${BLUE}Starting nginx...\${NC}"
-    docker-compose \$COMPOSE_FILES up -d nginx
+    echo -e "${BLUE}Starting nginx...${NC}"
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d nginx
     
-    echo -e "\${BLUE}Getting SSL certificate...\${NC}"
-    docker-compose \$COMPOSE_FILES run --rm certbot certonly --webroot -w /var/www/certbot --force-renewal --email \$EMAIL -d \$DOMAIN --agree-tos
+    echo -e "${BLUE}Getting SSL certificate...${NC}"
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES run --rm certbot certonly --webroot -w /var/www/certbot --force-renewal --email $EMAIL -d $DOMAIN --agree-tos
     
-    echo -e "\${BLUE}Restarting nginx with SSL...\${NC}"
-    docker-compose \$COMPOSE_FILES restart nginx
+    echo -e "${BLUE}Restarting nginx with SSL...${NC}"
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES restart nginx
     
     # Setup automatic SSL renewal
-    echo -e "\${GREEN}🔄 Setting up SSL Auto-renewal\${NC}"
-    (crontab -l 2>/dev/null; echo "0 12 * * * cd \$(pwd) && docker-compose \$COMPOSE_FILES run --rm certbot renew --quiet && docker-compose \$COMPOSE_FILES restart nginx") | crontab -
+    echo -e "${GREEN}🔄 Setting up SSL Auto-renewal${NC}"
+    (crontab -l 2>/dev/null; echo "0 12 * * * cd $(pwd) && $DOCKER_COMPOSE_CMD $COMPOSE_FILES run --rm certbot renew --quiet && $DOCKER_COMPOSE_CMD $COMPOSE_FILES restart nginx") | crontab -
     
-    MANAGEMENT_COMPOSE="\$COMPOSE_FILES"
+    MANAGEMENT_COMPOSE="$DOCKER_COMPOSE_CMD $COMPOSE_FILES"
     
 else
     # Local development
-    echo -e "\${GREEN}🔧 Configuring for Local Development\${NC}"
+    echo -e "${GREEN}🔧 Configuring for Local Development${NC}"
     
-    echo -e "\${GREEN}🚀 Starting Local Development Services\${NC}"
+    echo -e "${GREEN}🚀 Starting Local Development Services${NC}"
     
     # Use standard docker-compose
     COMPOSE_FILES="-f docker-compose.yml"
     
     # Start services
-    echo -e "\${BLUE}Starting database...\${NC}"
-    docker-compose \$COMPOSE_FILES up -d traccar-mysql
+    echo -e "${BLUE}Starting database...${NC}"
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d traccar-mysql
     
-    echo -e "\${BLUE}Waiting for database to be ready...\${NC}"
+    echo -e "${BLUE}Waiting for database to be ready...${NC}"
     sleep 20
     
-    echo -e "\${BLUE}Building and starting all services...\${NC}"
-    docker-compose \$COMPOSE_FILES up -d
+    echo -e "${BLUE}Building and starting all services...${NC}"
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d
     
-    MANAGEMENT_COMPOSE="\$COMPOSE_FILES"
+    MANAGEMENT_COMPOSE="$DOCKER_COMPOSE_CMD $COMPOSE_FILES"
 fi
 
 echo ""
-echo -e "\${GREEN}✅ Setup Complete!\${NC}"
-echo -e "\${GREEN}==================\${NC}"
+echo -e "${GREEN}✅ Setup Complete!${NC}"
+echo -e "${GREEN}==================${NC}"
 echo ""
 
-if [ "\$DEPLOYMENT_MODE" = "production" ]; then
-    echo -e "\${BLUE}🌐 Your Traccar system is available at:\${NC}"
-    echo -e "   \${GREEN}Web Interface:\${NC} https://\$DOMAIN"
-    echo -e "   \${GREEN}Admin Login:\${NC} admin / admin"
-    echo -e "   \${GREEN}Database Admin:\${NC} https://\$DOMAIN/phpmyadmin"
+if [ "$DEPLOYMENT_MODE" = "production" ]; then
+    echo -e "${BLUE}🌐 Your Traccar system is available at:${NC}"
+    echo -e "   ${GREEN}Web Interface:${NC} https://$DOMAIN"
+    echo -e "   ${GREEN}Admin Login:${NC} admin / admin"
+    echo -e "   ${GREEN}Database Admin:${NC} https://$DOMAIN/phpmyadmin"
     echo ""
-    echo -e "\${BLUE}📱 GPS Device Setup:\${NC}"
-    echo -e "   \${GREEN}Server:\${NC} \$DOMAIN"
-    echo -e "   \${GREEN}Port:\${NC} 5055 (and other protocol ports)"
+    echo -e "${BLUE}📱 GPS Device Setup:${NC}"
+    echo -e "   ${GREEN}Server:${NC} $DOMAIN"
+    echo -e "   ${GREEN}Port:${NC} 5055 (and other protocol ports)"
     echo ""
-    echo -e "\${YELLOW}⚠️  Important:\${NC}"
+    echo -e "${YELLOW}⚠️  Important:${NC}"
     echo -e "   • Change the default admin password immediately"
     echo -e "   • Configure your GPS devices to use the domain"
     echo -e "   • SSL certificates will auto-renew via cron"
 else
-    echo -e "\${BLUE}🌐 Your Traccar system is available at:\${NC}"
-    echo -e "   \${GREEN}Web Interface:\${NC} http://localhost:\$FRONTEND_PORT"
-    echo -e "   \${GREEN}Backend API:\${NC} http://localhost:\$BACKEND_PORT"
-    echo -e "   \${GREEN}Admin Login:\${NC} admin / admin"
-    echo -e "   \${GREEN}Database Admin:\${NC} http://localhost:\$PHPMYADMIN_PORT"
+    echo -e "${BLUE}🌐 Your Traccar system is available at:${NC}"
+    echo -e "   ${GREEN}Web Interface:${NC} http://localhost:$FRONTEND_PORT"
+    echo -e "   ${GREEN}Backend API:${NC} http://localhost:$BACKEND_PORT"
+    echo -e "   ${GREEN}Admin Login:${NC} admin / admin"
+    echo -e "   ${GREEN}Database Admin:${NC} http://localhost:$PHPMYADMIN_PORT"
     echo ""
-    echo -e "\${BLUE}📱 GPS Device Setup (Local Testing):\${NC}"
-    echo -e "   \${GREEN}Server:\${NC} localhost or your-local-ip"
-    echo -e "   \${GREEN}Port:\${NC} 5055 (and other protocol ports)"
+    echo -e "${BLUE}📱 GPS Device Setup (Local Testing):${NC}"
+    echo -e "   ${GREEN}Server:${NC} localhost or your-local-ip"
+    echo -e "   ${GREEN}Port:${NC} 5055 (and other protocol ports)"
     echo ""
-    echo -e "\${YELLOW}⚠️  For production deployment, run:\${NC}"
-    echo -e "   \${GREEN}./setup.sh\${NC} and select option 2"
+    echo -e "${YELLOW}⚠️  For production deployment, run:${NC}"
+    echo -e "   ${GREEN}./setup.sh${NC} and select option 2"
 fi
 
 echo ""
-echo -e "\${BLUE}📋 Management Commands:\${NC}"
-echo -e "   \${GREEN}View logs:\${NC} docker-compose \$MANAGEMENT_COMPOSE logs -f"
-echo -e "   \${GREEN}Restart:\${NC} docker-compose \$MANAGEMENT_COMPOSE restart"
-echo -e "   \${GREEN}Status:\${NC} docker-compose \$MANAGEMENT_COMPOSE ps"
-echo -e "   \${GREEN}Stop:\${NC} docker-compose \$MANAGEMENT_COMPOSE down"
+echo -e "${BLUE}📋 Management Commands:${NC}"
+echo -e "   ${GREEN}View logs:${NC} $MANAGEMENT_COMPOSE logs -f"
+echo -e "   ${GREEN}Restart:${NC} $MANAGEMENT_COMPOSE restart"
+echo -e "   ${GREEN}Status:${NC} $MANAGEMENT_COMPOSE ps"
+echo -e "   ${GREEN}Stop:${NC} $MANAGEMENT_COMPOSE down"
 echo ""
 
 # Check if user needs to re-login for docker group
-if ! groups \$USER | grep -q docker 2>/dev/null; then
-    echo -e "\${YELLOW}⚠️  You may need to logout and login again for Docker permissions to take effect\${NC}"
+if ! groups $USER | grep -q docker 2>/dev/null; then
+    echo -e "${YELLOW}⚠️  You may need to logout and login again for Docker permissions to take effect${NC}"
 fi

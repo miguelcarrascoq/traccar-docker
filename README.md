@@ -38,11 +38,14 @@ cd traccar-docker
 
 #### 🏠 Local Development
 ```bash
-# Copy environment file
-cp .env.example .env
+# Option 1: Quick start (uses defaults)
+./start-local.sh
 
-# Start services
-docker-compose up -d
+# Option 2: Manual setup
+cp .env.example .env
+# Edit .env if needed, then:
+docker compose up -d
+# or: docker-compose up -d
 ```
 
 #### 🌐 Production VPS
