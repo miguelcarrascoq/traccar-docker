@@ -16,13 +16,25 @@ Complete deployment with SSL certificates and domain setup.
 
 ### Automated Setup Script
 ```bash
-# Download and run the setup script
+# Download and run the setup script (automatically downloads repository)
 curl -fsSL https://raw.githubusercontent.com/miguelcarrascoq/traccar-docker/main/setup.sh | bash
 ```
 
-**The script will ask you to choose:**
-1. **Local Development** - Quick setup for localhost testing
-2. **Production VPS** - Full deployment with domain and SSL
+**The script will:**
+1. **Auto-detect** if repository files are present
+2. **Download repository** automatically if needed (into current directory or `traccar-docker/` folder)
+3. **Ask you to choose** deployment mode:
+   - **Local Development** - Quick setup for localhost testing
+   - **Production VPS** - Full deployment with domain and SSL
+4. **Handle Docker Compose** command variations automatically (`docker compose` vs `docker-compose`)
+
+### Alternative: Clone First
+```bash
+# If you prefer to clone the repository first
+git clone https://github.com/miguelcarrascoq/traccar-docker.git
+cd traccar-docker
+./setup.sh
+```
 
 ---
 
@@ -126,31 +138,35 @@ PHPMYADMIN_PORT=8080
 ### Local Development
 ```bash
 # View status
-docker-compose ps
+docker compose ps
+# or: docker-compose ps
 
 # View logs
-docker-compose logs -f traccar-backend
+docker compose logs -f traccar-backend
+# or: docker-compose logs -f traccar-backend
 
 # Restart services
-docker-compose restart
+docker compose restart
+# or: docker-compose restart
 
 # Stop services
-docker-compose down
+docker compose down
+# or: docker-compose down
 ```
 
 ### Production
 ```bash
 # View status
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml ps
+docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 
 # View logs
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
 
 # Restart services
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml restart
+docker compose -f docker-compose.yml -f docker-compose.prod.yml restart
 
 # Update system
-git pull && docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull && docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+git pull && docker compose -f docker-compose.yml -f docker-compose.prod.yml pull && docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ### Database Backup
@@ -172,19 +188,19 @@ docker exec -i traccar-mysql mysql -u traccar -p traccar < backup.sql
 openssl s_client -connect your-domain.com:443 -servername your-domain.com
 
 # Manually renew certificates
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot renew
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml restart nginx
+docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm certbot renew
+docker compose -f docker-compose.yml -f docker-compose.prod.yml restart nginx
 ```
 
 ### Service Issues
 ```bash
 # Check all services
-docker-compose ps  # local
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml ps  # production
+docker compose ps  # local
+docker compose -f docker-compose.yml -f docker-compose.prod.yml ps  # production
 
 # View specific service logs
-docker-compose logs traccar-backend
-docker-compose logs nginx  # production only
+docker compose logs traccar-backend
+docker compose logs nginx  # production only
 ```
 
 ### Port Conflicts (Local)

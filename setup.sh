@@ -51,6 +51,33 @@ docker_compose_cmd() {
     fi
 }
 
+# Function to download repository if not already present
+ensure_repository() {
+    if [ ! -f "docker-compose.yml" ] || [ ! -f "Dockerfile.backend" ]; then
+        echo -e "${BLUE}📦 Downloading Traccar Docker repository...${NC}"
+        
+        # Check if we're in an empty directory or need to create one
+        if [ "$(ls -A . 2>/dev/null)" ]; then
+            # Directory has files, create subdirectory
+            mkdir -p traccar-docker
+            cd traccar-docker
+        fi
+        
+        # Download repository files
+        if command_exists git; then
+            git clone https://github.com/miguelcarrascoq/traccar-docker.git .
+        else
+            # Fallback: download via curl/wget
+            echo -e "${YELLOW}⚠️  Git not available, downloading files individually...${NC}"
+            curl -fsSL https://github.com/miguelcarrascoq/traccar-docker/archive/main.tar.gz | tar -xz --strip-components=1
+        fi
+        
+        echo -e "${GREEN}✅ Repository downloaded${NC}"
+    else
+        echo -e "${GREEN}✅ Repository files found${NC}"
+    fi
+}
+
 # Select deployment mode
 echo -e "${GREEN}� Deployment Mode Selection${NC}"
 echo "1) Local Development (localhost, no SSL)"
@@ -108,6 +135,9 @@ fi
 
 echo ""
 echo -e "${GREEN}🔧 Installing Dependencies${NC}"
+
+# Ensure we have the repository files
+ensure_repository
 
 # Install Docker and Docker Compose
 if ! command_exists docker; then
