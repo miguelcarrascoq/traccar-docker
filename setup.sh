@@ -15,6 +15,22 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}🚀 Traccar Setup Script${NC}"
 echo -e "${BLUE}=======================${NC}"
 
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Function to check docker compose (handles both docker-compose and docker compose)
+docker_compose_cmd() {
+    if command_exists docker-compose; then
+        echo "docker-compose"
+    elif docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+    else
+        echo ""
+    fi
+}
+
 # Function to download repository if not already present
 ensure_repository() {
     if [ ! -f "docker-compose.yml" ] || [ ! -f "Dockerfile.backend" ]; then
@@ -49,9 +65,6 @@ ensure_repository() {
     fi
 }
 
-# Ensure we have the repository files BEFORE doing anything else
-ensure_repository
-
 # Function to prompt for user input
 prompt_input() {
     local prompt="$1"
@@ -72,21 +85,8 @@ prompt_input() {
     eval "$var_name='$input'"
 }
 
-# Function to check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
-# Function to check docker compose (handles both docker-compose and docker compose)
-docker_compose_cmd() {
-    if command_exists docker-compose; then
-        echo "docker-compose"
-    elif docker compose version >/dev/null 2>&1; then
-        echo "docker compose"
-    else
-        echo ""
-    fi
-}
+# Ensure we have the repository files BEFORE doing anything else
+ensure_repository
 
 # Select deployment mode
 echo -e "${GREEN}� Deployment Mode Selection${NC}"
