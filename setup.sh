@@ -15,6 +15,43 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}🚀 Traccar Setup Script${NC}"
 echo -e "${BLUE}=======================${NC}"
 
+# Function to download repository if not already present
+ensure_repository() {
+    if [ ! -f "docker-compose.yml" ] || [ ! -f "Dockerfile.backend" ]; then
+        echo -e "${BLUE}📦 Downloading Traccar Docker repository...${NC}"
+        
+        # Check if we're in an empty directory or need to create one
+        if [ "$(ls -A . 2>/dev/null)" ]; then
+            # Directory has files, create subdirectory
+            mkdir -p traccar-docker
+            cd traccar-docker
+            echo -e "${BLUE}📁 Changed to directory: $(pwd)${NC}"
+        fi
+        
+        # Download repository files
+        if command_exists git; then
+            git clone https://github.com/miguelcarrascoq/traccar-docker.git .
+        else
+            # Fallback: download via curl/wget
+            echo -e "${YELLOW}⚠️  Git not available, downloading files individually...${NC}"
+            curl -fsSL https://github.com/miguelcarrascoq/traccar-docker/archive/main.tar.gz | tar -xz --strip-components=1
+        fi
+        
+        echo -e "${GREEN}✅ Repository downloaded${NC}"
+    else
+        echo -e "${GREEN}✅ Repository files found${NC}"
+    fi
+    
+    # Ensure we're in the correct directory
+    if [ ! -f "docker-compose.yml" ]; then
+        echo -e "${RED}❌ docker-compose.yml not found. Repository download may have failed.${NC}"
+        exit 1
+    fi
+}
+
+# Ensure we have the repository files BEFORE doing anything else
+ensure_repository
+
 # Function to prompt for user input
 prompt_input() {
     local prompt="$1"
@@ -48,33 +85,6 @@ docker_compose_cmd() {
         echo "docker compose"
     else
         echo ""
-    fi
-}
-
-# Function to download repository if not already present
-ensure_repository() {
-    if [ ! -f "docker-compose.yml" ] || [ ! -f "Dockerfile.backend" ]; then
-        echo -e "${BLUE}📦 Downloading Traccar Docker repository...${NC}"
-        
-        # Check if we're in an empty directory or need to create one
-        if [ "$(ls -A . 2>/dev/null)" ]; then
-            # Directory has files, create subdirectory
-            mkdir -p traccar-docker
-            cd traccar-docker
-        fi
-        
-        # Download repository files
-        if command_exists git; then
-            git clone https://github.com/miguelcarrascoq/traccar-docker.git .
-        else
-            # Fallback: download via curl/wget
-            echo -e "${YELLOW}⚠️  Git not available, downloading files individually...${NC}"
-            curl -fsSL https://github.com/miguelcarrascoq/traccar-docker/archive/main.tar.gz | tar -xz --strip-components=1
-        fi
-        
-        echo -e "${GREEN}✅ Repository downloaded${NC}"
-    else
-        echo -e "${GREEN}✅ Repository files found${NC}"
     fi
 }
 
@@ -135,9 +145,6 @@ fi
 
 echo ""
 echo -e "${GREEN}🔧 Installing Dependencies${NC}"
-
-# Ensure we have the repository files
-ensure_repository
 
 # Install Docker and Docker Compose
 if ! command_exists docker; then
