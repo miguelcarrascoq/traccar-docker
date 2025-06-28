@@ -113,6 +113,27 @@ esac
 echo ""
 echo -e "${GREEN}� Configuration Setup${NC}"
 
+# Ask about private repository
+echo ""
+echo -e "${BLUE}🔒 Repository Configuration${NC}"
+echo "Do you want to use a private Traccar repository? (y/N)"
+read -p "$(echo -e "${YELLOW}Use private repository? [N]:${NC} ")" USE_PRIVATE_REPO
+USE_PRIVATE_REPO=${USE_PRIVATE_REPO:-N}
+
+if [[ "$USE_PRIVATE_REPO" =~ ^[Yy]$ ]]; then
+    echo -e "${GREEN}🔐 Private Repository Setup${NC}"
+    prompt_input "Enter Git username" GIT_USERNAME
+    prompt_input "Enter Git password/token" GIT_PASSWORD
+    prompt_input "Enter backend repository URL" GIT_BACKEND_REPO_URL "https://github.com/your-username/your-private-traccar.git"
+    prompt_input "Enter frontend repository URL" GIT_FRONTEND_REPO_URL "https://github.com/your-username/your-private-traccar-web.git"
+else
+    GIT_USERNAME=""
+    GIT_PASSWORD=""
+    GIT_BACKEND_REPO_URL="https://github.com/traccar/traccar.git"
+    GIT_FRONTEND_REPO_URL="https://github.com/traccar/traccar-web.git"
+    echo -e "${GREEN}✅ Using public Traccar repositories${NC}"
+fi
+
 # Common configuration
 prompt_input "Enter MySQL root password" MYSQL_ROOT_PASSWORD "root_password"
 prompt_input "Enter MySQL traccar password" MYSQL_PASSWORD "traccar_password"
@@ -194,6 +215,12 @@ DEPLOYMENT_MODE=$DEPLOYMENT_MODE
 # Domain Configuration
 DOMAIN=$DOMAIN
 EMAIL=$EMAIL
+
+# Private Repository Configuration
+GIT_USERNAME=$GIT_USERNAME
+GIT_PASSWORD=$GIT_PASSWORD
+GIT_BACKEND_REPO_URL=$GIT_BACKEND_REPO_URL
+GIT_FRONTEND_REPO_URL=$GIT_FRONTEND_REPO_URL
 
 # Database Configuration
 MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD

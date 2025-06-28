@@ -49,6 +49,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      args:
+        - GIT_USERNAME=${GIT_USERNAME:-}
+        - GIT_PASSWORD=${GIT_PASSWORD:-}
+        - GIT_BACKEND_REPO_URL=${GIT_BACKEND_REPO_URL:-https://github.com/traccar/traccar.git}
     container_name: traccar-backend
     hostname: traccar-backend
     depends_on:
@@ -72,6 +76,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        - GIT_USERNAME=${GIT_USERNAME:-}
+        - GIT_PASSWORD=${GIT_PASSWORD:-}
+        - GIT_FRONTEND_REPO_URL=${GIT_FRONTEND_REPO_URL:-https://github.com/traccar/traccar-web.git}
     container_name: traccar-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:3000"

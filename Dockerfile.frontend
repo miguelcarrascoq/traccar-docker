@@ -5,8 +5,13 @@ WORKDIR /build
 # Install git
 RUN apk add --no-cache git
 
-# Clone and build Traccar web frontend
-RUN git clone https://github.com/traccar/traccar-web.git . && \
+# Clone and build Traccar web frontend from private repo
+# Method 1: Using build args for credentials
+ARG GIT_USERNAME
+ARG GIT_PASSWORD
+ARG GIT_FRONTEND_REPO_URL=https://github.com/traccar/traccar-web.git
+
+RUN git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_FRONTEND_REPO_URL#https://} . && \
     npm install && \
     npm run build
 

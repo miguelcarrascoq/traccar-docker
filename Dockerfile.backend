@@ -7,8 +7,13 @@ RUN apt-get update && \
     apt-get install -y git wget unzip && \
     rm -rf /var/lib/apt/lists/*
 
-# Clone and build Traccar backend
-RUN git clone https://github.com/traccar/traccar.git . && \
+# Clone and build Traccar backend from private repo
+# Method 1: Using build args for credentials
+ARG GIT_USERNAME
+ARG GIT_PASSWORD
+ARG GIT_BACKEND_REPO_URL=https://github.com/traccar/traccar.git
+
+RUN git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_BACKEND_REPO_URL#https://} . && \
     cp -r schema /tmp/schema && \
     ./gradlew build -x test
 
