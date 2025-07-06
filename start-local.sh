@@ -16,20 +16,56 @@ fi
 
 # Check Docker Compose command
 DOCKER_COMPOSE_CMD=""
-if command -v docker-compose >/dev/null 2>&1; then
-    DOCKER_COMPOSE_CMD="docker-compose"
-elif docker compose version >/dev/null 2>&1; then
-    DOCKER_COMPOSE_CMD="docker compose"
+DOCKER_CMD=""
+
+# Find Docker command
+if command -v docker >/dev/null 2>&1; then
+    DOCKER_CMD="docker"
 else
-    echo "❌ Docker Compose not found. Please install Docker Desktop or docker-compose"
+    echo "❌ Docker not found. Please install Docker"
     exit 1
 fi
 
-echo "✅ Using: $DOCKER_COMPOSE_CMD"
+# Function to check if command works
+check_command() {
+    "$@" >/dev/null 2>&1
+}
+
+# First check if docker-compose (v1) is available
+if check_command docker-compose --version; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+    echo "✅ Found docker-compose (v1)"
+# Then check if docker compose (v2) is available
+elif check_command $DOCKER_CMD --version && check_command $DOCKER_CMD compose version; then
+    DOCKER_COMPOSE_CMD="$DOCKER_CMD compose"
+    echo "✅ Found docker compose (v2)"
+else
+    echo "❌ Docker Compose not found"
+    echo "💡 Make sure Docker is running or install docker-compose"
+    echo "🔍 Debug info:"
+    echo "   Docker command: $DOCKER_CMD"
+    echo "   Docker version: $($DOCKER_CMD --version 2>/dev/null || echo 'not found')"
+    echo "   Docker Compose version: $($DOCKER_CMD compose version 2>/dev/null || echo 'not found')"
+    exit 1
+fi
+
+echo "🔧 Using: $DOCKER_COMPOSE_CMD"
 
 # Start services
 echo "🔧 Starting services..."
-$DOCKER_COMPOSE_CMD up -d
+
+# Add Docker bin to PATH if it exists (for credential helpers)
+DOCKER_BIN_PATH="${HOME}/.docker/bin"
+if [ -d "$DOCKER_BIN_PATH" ]; then
+    export PATH="$DOCKER_BIN_PATH:$PATH"
+fi
+
+if [[ "$DOCKER_COMPOSE_CMD" == *" "* ]]; then
+    # Command contains spaces, need to split it
+    eval "$DOCKER_COMPOSE_CMD up -d"
+else
+    $DOCKER_COMPOSE_CMD up -d
+fi
 
 echo ""
 echo "✅ Traccar is starting!"
