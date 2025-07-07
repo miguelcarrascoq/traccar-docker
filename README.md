@@ -16,6 +16,18 @@ cd traccar-docker
 ./start-local.sh
 ```
 
+### Troubleshooting & Fixing Common Issues
+```bash
+# Fix Docker credential helper issues
+./fix-docker-build.sh
+
+# Reset database and fix migration issues
+./fix-docker-build.sh --reset-db
+
+# Check system status and container health
+./check-status.sh
+```
+
 **The setup script automatically:**
 - Downloads repository if needed
 - Handles Docker installation  
@@ -111,12 +123,14 @@ docker exec -i traccar-mysql mysql -u traccar -p traccar < backup.sql
 
 ## 🆘 Troubleshooting
 
-**Port Conflicts (Local):** Edit `.env` and change port numbers  
+**Docker Auth Issues:** Run `./fix-docker-build.sh` to fix credential helper problems  
+**Database Errors:** Run `./fix-docker-build.sh --reset-db` to reset the database  
 **SSL Issues (Production):** Check `docker compose logs nginx` and certificate status  
 **Build Failures:** Verify private repository credentials in `.env`  
 **Database Connection:** Ensure MySQL container is healthy: `docker compose ps`
 
-**Need Help?** Check logs first: `docker compose logs [service-name]`
+**Need Help?** Check logs first: `docker compose logs [service-name]`  
+**Detailed Troubleshooting:** See `TROUBLESHOOTING.md` for comprehensive solutions
 
 ---
 

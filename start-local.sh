@@ -82,8 +82,21 @@ echo "🔧 Starting services..."
 # Add Docker bin to PATH if it exists (for credential helpers)
 DOCKER_BIN_PATH="${HOME}/.docker/bin"
 if [ -d "$DOCKER_BIN_PATH" ]; then
+    echo "🔧 Adding Docker bin directory to PATH for credential helpers"
     export PATH="$DOCKER_BIN_PATH:$PATH"
 fi
+
+# Check for docker-credential-desktop and create symlink if needed
+if [ ! -f "$(which docker-credential-desktop 2>/dev/null)" ] && [ -f "$DOCKER_BIN_PATH/docker-credential-desktop" ]; then
+    echo "🔧 Creating symlink for docker-credential-desktop"
+    mkdir -p ~/bin
+    ln -sf "$DOCKER_BIN_PATH/docker-credential-desktop" ~/bin/docker-credential-desktop
+    export PATH="$HOME/bin:$PATH"
+fi
+
+# Print helpful information for debugging
+echo "🔍 PATH=$PATH"
+echo "🔍 docker-credential-desktop location: $(which docker-credential-desktop 2>/dev/null || echo 'not found in PATH')"
 
 if [[ "$DOCKER_COMPOSE_CMD" == *" "* ]]; then
     # Command contains spaces, need to split it

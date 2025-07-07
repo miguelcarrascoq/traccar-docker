@@ -8,12 +8,24 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Clone and build Traccar backend from private repo
-# Method 1: Using build args for credentials
+# Using build args for credentials with Personal Access Token
 ARG GIT_USERNAME
 ARG GIT_PASSWORD
 ARG GIT_BACKEND_REPO_URL=https://github.com/traccar/traccar.git
 
-RUN git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_BACKEND_REPO_URL#https://} . && \
+# Configure Git to use credentials and disable SSL verification for troubleshooting
+RUN git config --global credential.helper store && \
+    git config --global http.sslVerify false
+
+# Clone repo - first try with credentials, fallback to public URL if credentials not provided
+RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
+        echo "Cloning with credentials for $GIT_BACKEND_REPO_URL"; \
+        echo "https://$GIT_USERNAME:$GIT_PASSWORD@${GIT_BACKEND_REPO_URL#https://}" > ~/.git-credentials && \
+        git clone --progress "$GIT_BACKEND_REPO_URL" .; \
+    else \
+        echo "Cloning public repo $GIT_BACKEND_REPO_URL"; \
+        git clone --progress "$GIT_BACKEND_REPO_URL" .; \
+    fi && \
     cp -r schema /tmp/schema && \
     ./gradlew build -x test
 

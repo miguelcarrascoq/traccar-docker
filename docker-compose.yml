@@ -28,7 +28,7 @@ services:
       start_period: 30s
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
+    image: arm64v8/phpmyadmin:latest
     container_name: traccar-phpmyadmin
     environment:
       PMA_HOST: traccar-mysql
@@ -53,6 +53,8 @@ services:
         - GIT_USERNAME=${GIT_USERNAME:-}
         - GIT_PASSWORD=${GIT_PASSWORD:-}
         - GIT_BACKEND_REPO_URL=${GIT_BACKEND_REPO_URL:-https://github.com/traccar/traccar.git}
+      platforms:
+        - linux/arm64
     container_name: traccar-backend
     hostname: traccar-backend
     depends_on:
@@ -80,6 +82,8 @@ services:
         - GIT_USERNAME=${GIT_USERNAME:-}
         - GIT_PASSWORD=${GIT_PASSWORD:-}
         - GIT_FRONTEND_REPO_URL=${GIT_FRONTEND_REPO_URL:-https://github.com/traccar/traccar-web.git}
+      platforms:
+        - linux/arm64
     container_name: traccar-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
