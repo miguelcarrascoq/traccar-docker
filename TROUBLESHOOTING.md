@@ -9,7 +9,12 @@ If you're seeing errors like:
 error getting credentials - err: exec: "docker-credential-desktop": executable file not found in $PATH
 ```
 
-This means Docker can't find the credential helper it needs. Use our `fix-docker-build.sh` script:
+Or:
+```
+zsh: no such file or directory: /Applications/Docker.app/Contents/Resources/bin/dockerexport
+```
+
+This means Docker can't find the credential helper or Docker CLI plugins it needs. Use our `fix-docker-build.sh` script:
 
 ```bash
 ./fix-docker-build.sh
@@ -17,7 +22,8 @@ This means Docker can't find the credential helper it needs. Use our `fix-docker
 
 This script:
 - Adds Docker's bin directory to PATH
-- Creates a symlink to the credential helper
+- Creates symlinks to the credential helper and dockerexport
+- Sets up Docker CLI plugin paths
 
 ## 2. Database Migration Issues
 

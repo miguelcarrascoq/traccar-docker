@@ -53,6 +53,7 @@ services:
         - GIT_USERNAME=${GIT_USERNAME:-}
         - GIT_PASSWORD=${GIT_PASSWORD:-}
         - GIT_BACKEND_REPO_URL=${GIT_BACKEND_REPO_URL:-https://github.com/traccar/traccar.git}
+        - GIT_BACKEND_BRANCH=${GIT_BACKEND_BRANCH:-}
       platforms:
         - linux/arm64
     container_name: traccar-backend
@@ -82,6 +83,7 @@ services:
         - GIT_USERNAME=${GIT_USERNAME:-}
         - GIT_PASSWORD=${GIT_PASSWORD:-}
         - GIT_FRONTEND_REPO_URL=${GIT_FRONTEND_REPO_URL:-https://github.com/traccar/traccar-web.git}
+        - GIT_FRONTEND_BRANCH=${GIT_FRONTEND_BRANCH:-}
       platforms:
         - linux/arm64
     container_name: traccar-frontend

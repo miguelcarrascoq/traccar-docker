@@ -12,6 +12,7 @@ RUN apt-get update && \
 ARG GIT_USERNAME
 ARG GIT_PASSWORD
 ARG GIT_BACKEND_REPO_URL=https://github.com/traccar/traccar.git
+ARG GIT_BACKEND_BRANCH=""
 
 # Configure Git to use credentials and disable SSL verification for troubleshooting
 RUN git config --global credential.helper store && \
@@ -25,6 +26,10 @@ RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
     else \
         echo "Cloning public repo $GIT_BACKEND_REPO_URL"; \
         git clone --progress "$GIT_BACKEND_REPO_URL" .; \
+    fi && \
+    if [ -n "$GIT_BACKEND_BRANCH" ]; then \
+        echo "Checking out branch $GIT_BACKEND_BRANCH"; \
+        git checkout $GIT_BACKEND_BRANCH; \
     fi && \
     cp -r schema /tmp/schema && \
     ./gradlew build -x test

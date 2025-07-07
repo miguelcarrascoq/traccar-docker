@@ -10,6 +10,7 @@ RUN apk add --no-cache git
 ARG GIT_USERNAME
 ARG GIT_PASSWORD
 ARG GIT_FRONTEND_REPO_URL=https://github.com/traccar/traccar-web.git
+ARG GIT_FRONTEND_BRANCH=""
 
 # Configure Git to use credentials and disable SSL verification for troubleshooting
 RUN git config --global credential.helper store && \
@@ -23,6 +24,10 @@ RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
     else \
         echo "Cloning public repo $GIT_FRONTEND_REPO_URL"; \
         git clone --progress "$GIT_FRONTEND_REPO_URL" .; \
+    fi && \
+    if [ -n "$GIT_FRONTEND_BRANCH" ]; then \
+        echo "Checking out branch $GIT_FRONTEND_BRANCH"; \
+        git checkout $GIT_FRONTEND_BRANCH; \
     fi && \
     npm install && \
     npm run build

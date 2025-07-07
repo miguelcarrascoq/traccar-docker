@@ -11,6 +11,9 @@ GIT_USERNAME=your-github-username
 GIT_PASSWORD=your-personal-access-token
 GIT_BACKEND_REPO_URL=https://github.com/your-username/your-private-traccar.git
 GIT_FRONTEND_REPO_URL=https://github.com/your-username/your-private-traccar-web.git
+# Optional: specify branches to use (default: main/master)
+GIT_BACKEND_BRANCH=feature-branch
+GIT_FRONTEND_BRANCH=develop
 ```
 
 ### 2. Build and run:
@@ -60,6 +63,8 @@ If you have the source code locally:
 | `GIT_PASSWORD` | Password, token, or SSH key | `ghp_abc123...` |
 | `GIT_BACKEND_REPO_URL` | Backend repository URL | `https://github.com/user/traccar.git` |
 | `GIT_FRONTEND_REPO_URL` | Frontend repository URL | `https://github.com/user/traccar-web.git` |
+| `GIT_BACKEND_BRANCH` | Backend repository branch | `develop` |
+| `GIT_FRONTEND_BRANCH` | Frontend repository branch | `feature-login` |
 
 ## Git Provider Examples
 
@@ -104,7 +109,7 @@ docker build \
   --build-arg GIT_USERNAME=your-username \
   --build-arg GIT_PASSWORD=your-token \
   --build-arg GIT_BACKEND_REPO_URL=https://github.com/user/traccar.git \
-  --build-arg GIT_FRONTEND_REPO_URL=https://github.com/user/traccar-web.git \
+  --build-arg GIT_BACKEND_BRANCH=develop \
   -f Dockerfile.backend \
   -t traccar-backend .
 ```

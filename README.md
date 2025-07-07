@@ -62,6 +62,8 @@ GIT_USERNAME=your-username
 GIT_PASSWORD=your-token
 GIT_BACKEND_REPO_URL=https://github.com/your-username/traccar-backend.git
 GIT_FRONTEND_REPO_URL=https://github.com/your-username/traccar-frontend.git
+GIT_BACKEND_BRANCH=feature-branch  # Optional - specific branch to use
+GIT_FRONTEND_BRANCH=develop        # Optional - specific branch to use
 
 # Database
 MYSQL_ROOT_PASSWORD=secure_password

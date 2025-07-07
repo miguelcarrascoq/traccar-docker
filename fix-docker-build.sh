@@ -25,6 +25,16 @@ else
     echo "💡 This might be because Docker Desktop installed the binaries in a different location."
 fi
 
+# Check for Docker app bin location (for dockerexport)
+DOCKER_APP_BIN="/Applications/Docker.app/Contents/Resources/bin"
+if [ -d "$DOCKER_APP_BIN" ]; then
+    echo "✅ Found Docker app bin directory: $DOCKER_APP_BIN"
+    export PATH="$DOCKER_APP_BIN:$PATH"
+else
+    echo "❌ Docker app bin directory not found at $DOCKER_APP_BIN"
+    echo "💡 Docker desktop may be installed differently on your system."
+fi
+
 # Create user bin directory if it doesn't exist
 USER_BIN="${HOME}/bin"
 mkdir -p "$USER_BIN"
@@ -46,6 +56,32 @@ if [ -n "$CRED_HELPER" ]; then
 else
     echo "❌ Could not find docker-credential-desktop"
     echo "💡 You might need to reinstall Docker Desktop or manually locate the credential helper"
+fi
+
+# Check for dockerexport and create symlink if it exists
+if [ -f "/Applications/Docker.app/Contents/Resources/bin/dockerexport" ]; then
+    echo "✅ Found dockerexport"
+    ln -sf "/Applications/Docker.app/Contents/Resources/bin/dockerexport" "$USER_BIN/dockerexport"
+    echo "✅ Created dockerexport symlink in $USER_BIN"
+else
+    echo "❌ dockerexport not found in expected location"
+    # Try to find dockerexport in other locations
+    DOCKEREXPORT=$(find /Applications/Docker.app -name "dockerexport" -type f 2>/dev/null | head -n 1)
+    if [ -n "$DOCKEREXPORT" ]; then
+        echo "✅ Found dockerexport at: $DOCKEREXPORT"
+        ln -sf "$DOCKEREXPORT" "$USER_BIN/dockerexport"
+        echo "✅ Created dockerexport symlink in $USER_BIN"
+    else
+        echo "❌ Could not find dockerexport anywhere in Docker.app"
+    fi
+fi
+
+# Add Docker CLI plugin path to env variables
+export DOCKER_CLI_PLUGINS="/Applications/Docker.app/Contents/Resources/cli-plugins"
+if [ -d "$DOCKER_CLI_PLUGINS" ]; then
+    echo "✅ Set Docker CLI plugins path: $DOCKER_CLI_PLUGINS"
+else
+    echo "❌ Docker CLI plugins directory not found at $DOCKER_CLI_PLUGINS"
 fi
 
 # Check if credential helper is now in PATH
