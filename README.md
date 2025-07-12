@@ -92,7 +92,38 @@ PHPMYADMIN_PORT=8080
 
 ---
 
-## 🔧 Management Commands
+## �️ MySQL Volume Management Tools
+
+**Unified Volume**: Both development and local modes now use the same MySQL volume (`traccar-docker_mysql_data`), allowing you to switch between modes without losing data.
+
+### Quick Commands
+```bash
+# View volume information
+./mysql-volume-manager.sh info
+
+# Create backup
+./mysql-volume-manager.sh backup
+
+# Restore from backup
+./mysql-volume-manager.sh restore backup_file.tar.gz
+
+# Show all available commands
+./mysql-volume-manager.sh help
+```
+
+**📖 Complete Documentation:**
+- **[MySQL Volume Guide](MYSQL-VOLUME-GUIDE.md)** - Detailed guide with examples
+- **[Tools Reference](TOOLS-REFERENCE.md)** - Quick command reference
+
+### Benefits of Unified Volume
+- ✅ **Switch modes seamlessly**: Development ↔ Local without data loss
+- ✅ **Easy backups**: Create and restore complete database backups
+- ✅ **Data persistence**: All configurations, users, and devices preserved
+- ✅ **Safe migrations**: Copy data between environments
+
+---
+
+## �🔧 Management Commands
 
 ### Local Development
 ```bash

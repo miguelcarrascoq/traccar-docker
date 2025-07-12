@@ -10,7 +10,7 @@ services:
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
-      - mysql_data_dev:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
     restart: unless-stopped
     command: >
@@ -83,7 +83,7 @@ services:
       - traccar-network
 
 volumes:
-  mysql_data_dev:
+  mysql_data:
 
 networks:
   traccar-network:

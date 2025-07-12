@@ -1,0 +1,20 @@
+# Ejemplo de cómo usar el volumen MySQL existente en otro proyecto
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: traccar
+      MYSQL_DATABASE: traccar
+      MYSQL_USER: traccar
+      MYSQL_PASSWORD: traccar
+    volumes:
+      - mysql_data_external:/var/lib/mysql
+    ports:
+      - "3307:3306"
+
+volumes:
+  mysql_data_external:
+    external: true
+    name: traccar-docker_mysql_data_dev
