@@ -1,9 +1,9 @@
-FROM eclipse-temurin:17-jdk-alpine
+FROM amazoncorretto:17-alpine
 
 WORKDIR /app
 
-# Install git and maven
-RUN apk add --no-cache git maven
+# Install git and gradle (instead of maven)
+RUN apk add --no-cache git
 
 # Create entrypoint script
 RUN cat > /entrypoint.sh << 'EOF'
@@ -11,16 +11,16 @@ RUN cat > /entrypoint.sh << 'EOF'
 echo "🚀 Iniciando backend en modo desarrollo..."
 
 # Esperar a que el código fuente esté disponible
-while [ ! -f "/app/pom.xml" ]; do
+while [ ! -f "/app/build.gradle" ]; do
     echo "⏳ Esperando código fuente..."
     sleep 5
 done
 
-echo "📦 Compilando proyecto..."
-mvn compile
+echo "📦 Compilando proyecto con Gradle..."
+./gradlew compileJava
 
 echo "🌟 Iniciando servidor backend..."
-mvn exec:java -Dexec.mainClass=org.traccar.Main
+./gradlew run
 EOF
 
 RUN chmod +x /entrypoint.sh
