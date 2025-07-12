@@ -5,8 +5,36 @@
 ## 🚀 Quick Start
 
 ### One-Click Setup
+```b## 🆘 Troubleshooting
+
+### Common Issues
+
+#### Backend keeps restarting ("Internal Server Error")
+**Symptom:** `traccar-backend` container keeps restarting with exit code 1
+**Cause:** Database lock issue (Liquibase DATABASECHANGELOGLOCK table locked)
+**Solution:**
 ```bash
-# Download and run setup script
+# Stop all services
+docker compose down
+
+# Clean MySQL volume completely
+echo "DELETE" | ./mysql-volume-manager.sh clean
+
+# Restart services
+docker compose up -d
+```
+
+#### Database Connection Issues
+**Solution:** Ensure MySQL container is healthy: `docker compose ps`
+
+#### Build Failures
+**Solution:** Verify private repository credentials in `.env`
+
+#### Container Issues
+**Solution:** Check container logs: `docker compose logs [service-name]`
+
+**Need Help?** Check logs first: `docker compose logs [service-name]`  
+**Detailed Troubleshooting:** See `TROUBLESHOOTING.md` for comprehensive solutionswnload and run setup script
 ./setup.sh
 ```
 
