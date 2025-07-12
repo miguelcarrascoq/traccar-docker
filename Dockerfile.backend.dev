@@ -17,10 +17,10 @@ while [ ! -f "/app/build.gradle" ]; do
 done
 
 echo "📦 Compilando proyecto con Gradle..."
-./gradlew compileJava
+./gradlew assemble
 
 echo "🌟 Iniciando servidor backend..."
-./gradlew run
+java -jar target/tracker-server.jar
 EOF
 
 RUN chmod +x /entrypoint.sh
