@@ -21,6 +21,24 @@ services:
     networks:
       - traccar-network
 
+  # phpMyAdmin para gestión de base de datos
+  phpmyadmin:
+    image: arm64v8/phpmyadmin:latest
+    container_name: traccar-phpmyadmin-dev
+    environment:
+      PMA_HOST: traccar-mysql-dev
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER:-traccar}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-traccar_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    depends_on:
+      - traccar-mysql
+    restart: unless-stopped
+    networks:
+      - traccar-network
+
   # Servicio para clonar y mantener el código fuente
   traccar-source:
     build:

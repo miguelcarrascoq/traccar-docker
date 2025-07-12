@@ -5,7 +5,54 @@
 ## 🚀 Quick Start
 
 ### One-Click Setup
-```b## 🆘 Troubleshooting
+```bash
+# Download and run setup script
+./setup.sh
+```
+
+### Local Development
+```bash
+git clone https://github.com/miguelcarrascoq/traccar-docker.git
+cd traccar-docker
+./start-local.sh
+```
+
+### Development Mode
+```bash
+# Start development environment
+./start-dev.sh
+
+# Stop development environment
+./stop-dev.sh
+```
+
+### Troubleshooting & Fixing Common Issues
+```bash
+# Check system status and container health
+./check-status.sh
+```
+
+**The setup script automatically:**
+- Downloads repository if needed
+- Handles Docker installation  
+- Configures environment variables
+- Supports private repositories
+- Works with both `docker compose` and `docker-compose`
+
+---
+
+## 🌐 Access Your System
+
+| Environment | Frontend | Backend API | Database Admin | Default Login |
+|------------|----------|-------------|----------------|---------------|
+| **Local** | `http://localhost:3000` | `http://localhost:8082` | `http://localhost:8080` | admin / admin |
+| **Development** | `http://localhost:3000` | `http://localhost:8082` | `http://localhost:8080` | admin / admin |
+
+**📱 GPS Device Setup:** Use your domain or localhost with port `5055`
+
+---
+
+## 🆘 Troubleshooting
 
 ### Common Issues
 
@@ -34,9 +81,9 @@ docker compose up -d
 **Solution:** Check container logs: `docker compose logs [service-name]`
 
 **Need Help?** Check logs first: `docker compose logs [service-name]`  
-**Detailed Troubleshooting:** See `TROUBLESHOOTING.md` for comprehensive solutionswnload and run setup script
-./setup.sh
-```
+**Detailed Troubleshooting:** See `TROUBLESHOOTING.md` for comprehensive solutions
+
+---
 
 ### Local Development
 ```bash
@@ -175,7 +222,7 @@ docker compose down               # Stop
 
 ### Development Mode
 ```bash
-# Start development environment
+# Start development environment (includes phpMyAdmin)
 ./start-dev.sh
 
 # Stop development environment  
