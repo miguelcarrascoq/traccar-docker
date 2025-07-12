@@ -1,12 +1,32 @@
 # Traccar Docker Deployment
 
-🚀 **Complete GPS tracking system with one-click deployment for both local development and production VPS**
+🚀 **Complete GPS tracking system with one-click deployment for both local development and ## 🔧 Management Commands
 
-## 🚀 Quick Start
+### Local Development
+```bash
+docker compose up -d              # Start services
+docker compose ps                 # View status  
+docker compose logs -f            # View logs
+docker compose restart            # Restart
+docker compose down               # Stop
+```
+
+### Development Mode
+```bash
+# Start development environment
+./start-dev.sh
+
+# Stop development environment  
+./stop-dev.sh
+
+# View development logs
+docker compose -f docker-compose.dev.yml logs -f
+```# 🚀 Quick Start
 
 ### One-Click VPS Production Setup
 ```bash
-curl -fsSL https://raw.githubusercontent.com/miguelcarrascoq/traccar-docker/main/setup.sh | bash
+# Download and run setup script
+./setup.sh
 ```
 
 ### Local Development
@@ -18,12 +38,6 @@ cd traccar-docker
 
 ### Troubleshooting & Fixing Common Issues
 ```bash
-# Fix Docker credential helper issues
-./fix-docker-build.sh
-
-# Reset database and fix migration issues
-./fix-docker-build.sh --reset-db
-
 # Check system status and container health
 ./check-status.sh
 ```
@@ -31,7 +45,7 @@ cd traccar-docker
 **The setup script automatically:**
 - Downloads repository if needed
 - Handles Docker installation  
-- Configures SSL certificates (production)
+- Configures environment variables
 - Supports private repositories
 - Works with both `docker compose` and `docker-compose`
 
@@ -42,9 +56,9 @@ cd traccar-docker
 | Environment | Frontend | Backend API | Database Admin | Default Login |
 |------------|----------|-------------|----------------|---------------|
 | **Local** | `http://localhost:3000` | `http://localhost:8082` | `http://localhost:8080` | admin / admin |
-| **Production** | `https://your-domain.com` | `https://your-domain.com/api` | `https://your-domain.com/phpmyadmin` | admin / admin |
+| **Development** | `http://localhost:3000` | `http://localhost:8082` | `http://localhost:8080` | admin / admin |
 
-**📱 GPS Device Setup:** Use your domain (production) or localhost (development) with port `5055`
+**📱 GPS Device Setup:** Use your domain or localhost with port `5055`
 
 ---
 
@@ -84,11 +98,11 @@ PHPMYADMIN_PORT=8080
 
 ---
 
-## 🛡️ Production Features
-✅ SSL/TLS encryption (Let's Encrypt)  
-✅ Automatic certificate renewal  
-✅ Security headers & rate limiting  
-✅ DDoS protection  
+## 🛡️ Security Features
+✅ Container isolation  
+✅ Network security  
+✅ Volume encryption support  
+✅ Environment variable protection  
 
 ---
 
@@ -117,7 +131,7 @@ PHPMYADMIN_PORT=8080
 
 ### Benefits of Unified Volume
 - ✅ **Switch modes seamlessly**: Development ↔ Local without data loss
-- ✅ **Easy backups**: Create and restore complete database backups
+- ✅ **Easy backups**: Create and restore complete database backups  
 - ✅ **Data persistence**: All configurations, users, and devices preserved
 - ✅ **Safe migrations**: Copy data between environments
 
@@ -156,11 +170,9 @@ docker exec -i traccar-mysql mysql -u traccar -p traccar < backup.sql
 
 ## 🆘 Troubleshooting
 
-**Docker Auth Issues:** Run `./fix-docker-build.sh` to fix credential helper problems  
-**Database Errors:** Run `./fix-docker-build.sh --reset-db` to reset the database  
-**SSL Issues (Production):** Check `docker compose logs nginx` and certificate status  
+**Database Connection:** Ensure MySQL container is healthy: `docker compose ps`  
 **Build Failures:** Verify private repository credentials in `.env`  
-**Database Connection:** Ensure MySQL container is healthy: `docker compose ps`
+**Container Issues:** Check container logs: `docker compose logs [service-name]`  
 
 **Need Help?** Check logs first: `docker compose logs [service-name]`  
 **Detailed Troubleshooting:** See `TROUBLESHOOTING.md` for comprehensive solutions
@@ -169,12 +181,12 @@ docker exec -i traccar-mysql mysql -u traccar -p traccar < backup.sql
 
 ## 📊 System Requirements
 
-| Component | Local Dev | Production VPS |
-|-----------|-----------|----------------|
-| **RAM** | 1GB | 2GB+ (4GB recommended) |
-| **Storage** | 5GB | 20GB+ (50GB recommended) |
-| **CPU** | 1 core | 1+ cores (2+ recommended) |
-| **OS** | Any with Docker | Ubuntu 20.04+ |
+| Component | Local/Development | 
+|-----------|-------------------|
+| **RAM** | 1GB (2GB recommended) |
+| **Storage** | 5GB (10GB recommended) |
+| **CPU** | 1 core (2+ recommended) |
+| **OS** | Any with Docker |
 
 ---
 
