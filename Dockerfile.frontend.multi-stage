@@ -1,0 +1,46 @@
+FROM node:20-alpine AS source
+
+WORKDIR /source
+
+# Install git
+RUN apk add --no-cache git
+
+# Clone repo - configuración actual
+ARG GIT_USERNAME
+ARG GIT_PASSWORD
+ARG GIT_FRONTEND_REPO_URL=https://github.com/traccar/traccar-web.git
+ARG GIT_FRONTEND_BRANCH=""
+
+RUN git config --global credential.helper store && \
+    git config --global http.sslVerify false
+
+RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
+        echo "https://$GIT_USERNAME:$GIT_PASSWORD@${GIT_FRONTEND_REPO_URL#https://}" > ~/.git-credentials && \
+        git clone --progress "$GIT_FRONTEND_REPO_URL" .; \
+    else \
+        git clone --progress "$GIT_FRONTEND_REPO_URL" .; \
+    fi && \
+    if [ -n "$GIT_FRONTEND_BRANCH" ]; then \
+        git checkout $GIT_FRONTEND_BRANCH; \
+    fi
+
+# Stage para desarrollo - mantiene código fuente
+FROM source AS development
+WORKDIR /app
+COPY --from=source /source /app
+RUN npm install
+EXPOSE 3000
+CMD ["npm", "start"]
+
+# Stage para producción - compila y optimiza
+FROM source AS builder
+WORKDIR /build
+COPY --from=source /source /build
+RUN npm install && npm run build
+
+# Runtime stage con nginx para producción
+FROM nginx:alpine AS production
+COPY --from=builder /build/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+EXPOSE 3000
+CMD ["nginx", "-g", "daemon off;"]

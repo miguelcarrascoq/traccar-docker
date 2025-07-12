@@ -1,0 +1,82 @@
+FROM alpine:latest
+
+WORKDIR /tmp
+
+# Install git and rsync
+RUN apk add --no-cache git rsync
+
+# Using build args for credentials
+ARG GIT_USERNAME
+ARG GIT_PASSWORD
+ARG GIT_FRONTEND_REPO_URL=https://github.com/traccar/traccar-web.git
+ARG GIT_FRONTEND_BRANCH=""
+ARG GIT_BACKEND_REPO_URL=https://github.com/traccar/traccar.git
+ARG GIT_BACKEND_BRANCH=""
+
+# Configure Git
+RUN git config --global credential.helper store && \
+    git config --global http.sslVerify false
+
+# Clone frontend to temporary location
+RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
+        echo "Cloning frontend with credentials"; \
+        echo "https://$GIT_USERNAME:$GIT_PASSWORD@${GIT_FRONTEND_REPO_URL#https://}" > ~/.git-credentials && \
+        git clone --progress "$GIT_FRONTEND_REPO_URL" /tmp/frontend-source; \
+    else \
+        echo "Cloning public frontend repo"; \
+        git clone --progress "$GIT_FRONTEND_REPO_URL" /tmp/frontend-source; \
+    fi && \
+    if [ -n "$GIT_FRONTEND_BRANCH" ]; then \
+        cd /tmp/frontend-source && git checkout $GIT_FRONTEND_BRANCH; \
+    fi
+
+# Clone backend to temporary location
+RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
+        echo "Cloning backend with credentials"; \
+        git clone --progress "$GIT_BACKEND_REPO_URL" /tmp/backend-source; \
+    else \
+        echo "Cloning public backend repo"; \
+        git clone --progress "$GIT_BACKEND_REPO_URL" /tmp/backend-source; \
+    fi && \
+    if [ -n "$GIT_BACKEND_BRANCH" ]; then \
+        cd /tmp/backend-source && git checkout $GIT_BACKEND_BRANCH; \
+    fi
+
+# Create entrypoint script
+RUN cat > /entrypoint.sh << 'EOF'
+#!/bin/sh
+echo "🚀 Iniciando copia de código fuente..."
+
+# Esperar un poco para que los volúmenes estén listos
+sleep 2
+
+# Copiar frontend si el destino está vacío o es diferente
+if [ ! -f "/app/traccar-web/package.json" ]; then
+    echo "📥 Copiando código frontend..."
+    rsync -av --delete /tmp/frontend-source/ /app/traccar-web/
+    echo "✅ Frontend copiado a /app/traccar-web/"
+else
+    echo "⚠️  Frontend ya existe en /app/traccar-web/"
+fi
+
+# Copiar backend si el destino está vacío o es diferente
+if [ ! -f "/app/traccar-backend/pom.xml" ]; then
+    echo "📥 Copiando código backend..."
+    rsync -av --delete /tmp/backend-source/ /app/traccar-backend/
+    echo "✅ Backend copiado a /app/traccar-backend/"
+else
+    echo "⚠️  Backend ya existe en /app/traccar-backend/"
+fi
+
+echo "🎉 Código fuente listo para desarrollo!"
+echo "📁 Archivos disponibles:"
+echo "   - Frontend: /app/traccar-web/"
+echo "   - Backend: /app/traccar-backend/"
+
+# Mantener el contenedor vivo
+sleep infinity
+EOF
+
+RUN chmod +x /entrypoint.sh
+
+CMD ["/entrypoint.sh"]

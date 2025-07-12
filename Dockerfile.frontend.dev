@@ -1,0 +1,35 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install git for potential updates
+RUN apk add --no-cache git
+
+# Install nodemon for hot reloading
+RUN npm install -g nodemon
+
+# Create entrypoint script
+RUN cat > /entrypoint.sh << 'EOF'
+#!/bin/sh
+echo "🚀 Iniciando frontend en modo desarrollo..."
+
+# Esperar a que el código fuente esté disponible
+while [ ! -f "/app/package.json" ]; do
+    echo "⏳ Esperando código fuente..."
+    sleep 5
+done
+
+echo "📦 Instalando dependencias..."
+npm install
+
+echo "🌟 Iniciando servidor de desarrollo..."
+npm start
+EOF
+
+RUN chmod +x /entrypoint.sh
+
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["/entrypoint.sh"]

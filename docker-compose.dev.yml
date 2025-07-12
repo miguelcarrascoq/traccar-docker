@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  traccar-mysql:
+    image: mysql:8.0
+    container_name: traccar-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-traccar}
+      MYSQL_USER: ${MYSQL_USER:-traccar}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-traccar_password}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    command: >
+      --default-authentication-plugin=caching_sha2_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    networks:
+      - traccar-network
+
+  # Servicio para clonar y mantener el código fuente
+  traccar-source:
+    build:
+      context: .
+      dockerfile: Dockerfile.source
+      args:
+        - GIT_USERNAME=${GIT_USERNAME:-}
+        - GIT_PASSWORD=${GIT_PASSWORD:-}
+        - GIT_FRONTEND_REPO_URL=${GIT_FRONTEND_REPO_URL:-https://github.com/traccar/traccar-web.git}
+        - GIT_FRONTEND_BRANCH=${GIT_FRONTEND_BRANCH:-}
+        - GIT_BACKEND_REPO_URL=${GIT_BACKEND_REPO_URL:-https://github.com/traccar/traccar.git}
+        - GIT_BACKEND_BRANCH=${GIT_BACKEND_BRANCH:-}
+    container_name: traccar-source
+    volumes:
+      - ./src/traccar-web:/app/traccar-web:rw
+      - ./src/traccar-backend:/app/traccar-backend:rw
+    networks:
+      - traccar-network
+
+  # Frontend en modo desarrollo con hot reload
+  traccar-frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    container_name: traccar-frontend-dev
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ./src/traccar-web:/app:rw
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=${TRACCAR_WEB_URL:-http://localhost:8082}
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - traccar-network
+    depends_on:
+      - traccar-source
+
+  # Backend en modo desarrollo 
+  traccar-backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.dev
+    container_name: traccar-backend-dev
+    ports:
+      - "${BACKEND_PORT:-8082}:8082"
+      - "5000-5150:5000-5150"
+      - "5000-5150:5000-5150/udp"
+    volumes:
+      - ./src/traccar-backend:/app:rw
+      - ./traccar/logs:/opt/traccar/logs:rw
+      - ./traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
+      - ./traccar/data:/opt/traccar/data:rw
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx1g -Djava.net.preferIPv4Stack=true
+    depends_on:
+      - traccar-mysql
+      - traccar-source
+    networks:
+      - traccar-network
+
+volumes:
+  mysql_data_dev:
+
+networks:
+  traccar-network:
+    driver: bridge
