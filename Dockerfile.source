@@ -50,22 +50,44 @@ echo "🚀 Iniciando copia de código fuente..."
 # Esperar un poco para que los volúmenes estén listos
 sleep 2
 
+# Backup existing custom files if they exist
+if [ -d "/app/traccar-backend" ] && [ -f "/app/traccar-backend/build.gradle" ]; then
+    echo "📦 Backing up existing custom files..."
+    mkdir -p /tmp/custom-backup
+    
+    # Backup key files that might have been customized
+    [ -f "/app/traccar-backend/schema/changelog-master.xml" ] && cp "/app/traccar-backend/schema/changelog-master.xml" "/tmp/custom-backup/" 2>/dev/null
+    [ -f "/app/traccar-backend/src/main/java/org/traccar/api/resource/DeviceResource.java" ] && mkdir -p "/tmp/custom-backup/src/main/java/org/traccar/api/resource/" && cp "/app/traccar-backend/src/main/java/org/traccar/api/resource/DeviceResource.java" "/tmp/custom-backup/src/main/java/org/traccar/api/resource/" 2>/dev/null
+    [ -f "/app/traccar-backend/build.gradle" ] && cp "/app/traccar-backend/build.gradle" "/tmp/custom-backup/" 2>/dev/null
+fi
+
 # Copiar frontend si el destino está vacío o es diferente
-if [ ! -f "/app/traccar-web/package.json" ]; then
+if [ ! -f "/app/traccar-web/package.json" ] || [ -z "$(ls -A /app/traccar-web 2>/dev/null)" ]; then
     echo "📥 Copiando código frontend..."
     rsync -av --delete /tmp/frontend-source/ /app/traccar-web/
     echo "✅ Frontend copiado a /app/traccar-web/"
 else
-    echo "⚠️  Frontend ya existe en /app/traccar-web/"
+    echo "⚠️  Frontend ya existe en /app/traccar-web/ - conservando cambios locales"
 fi
 
 # Copiar backend si el destino está vacío o es diferente
-if [ ! -f "/app/traccar-backend/pom.xml" ]; then
+if [ ! -f "/app/traccar-backend/build.gradle" ] || [ -z "$(ls -A /app/traccar-backend 2>/dev/null)" ]; then
     echo "📥 Copiando código backend..."
     rsync -av --delete /tmp/backend-source/ /app/traccar-backend/
     echo "✅ Backend copiado a /app/traccar-backend/"
 else
-    echo "⚠️  Backend ya existe en /app/traccar-backend/"
+    echo "⚠️  Backend ya existe en /app/traccar-backend/ - conservando cambios locales"
+fi
+
+# Restore custom files if they were backed up
+if [ -d "/tmp/custom-backup" ]; then
+    echo "🔄 Restaurando archivos personalizados..."
+    
+    [ -f "/tmp/custom-backup/changelog-master.xml" ] && cp "/tmp/custom-backup/changelog-master.xml" "/app/traccar-backend/schema/" 2>/dev/null
+    [ -f "/tmp/custom-backup/src/main/java/org/traccar/api/resource/DeviceResource.java" ] && cp "/tmp/custom-backup/src/main/java/org/traccar/api/resource/DeviceResource.java" "/app/traccar-backend/src/main/java/org/traccar/api/resource/" 2>/dev/null
+    [ -f "/tmp/custom-backup/build.gradle" ] && cp "/tmp/custom-backup/build.gradle" "/app/traccar-backend/" 2>/dev/null
+    
+    echo "✅ Archivos personalizados restaurados"
 fi
 
 echo "🎉 Código fuente listo para desarrollo!"

@@ -19,8 +19,12 @@ done
 echo "📦 Compilando proyecto con Gradle..."
 ./gradlew assemble
 
+echo "📁 Creando directorios necesarios..."
+mkdir -p logs
+mkdir -p target/media
+
 echo "🌟 Iniciando servidor backend..."
-java -jar target/tracker-server.jar
+java -jar target/tracker-server.jar /opt/traccar/conf/traccar.xml
 EOF
 
 RUN chmod +x /entrypoint.sh

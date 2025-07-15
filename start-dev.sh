@@ -7,6 +7,19 @@ echo "🚀 Iniciando entorno de desarrollo de Traccar..."
 # Crear directorio para código fuente
 mkdir -p src/traccar-web src/traccar-backend
 
+# Backup existing custom files before starting
+if [ -f "src/traccar-backend/build.gradle" ]; then
+    echo "📦 Creando backup de archivos personalizados..."
+    mkdir -p .backup/$(date +%Y%m%d_%H%M%S)
+    
+    # Backup critical custom files
+    [ -f "src/traccar-backend/schema/changelog-master.xml" ] && cp "src/traccar-backend/schema/changelog-master.xml" ".backup/$(date +%Y%m%d_%H%M%S)/" 2>/dev/null
+    [ -f "src/traccar-backend/src/main/java/org/traccar/api/resource/DeviceResource.java" ] && mkdir -p ".backup/$(date +%Y%m%d_%H%M%S)/api/" && cp "src/traccar-backend/src/main/java/org/traccar/api/resource/DeviceResource.java" ".backup/$(date +%Y%m%d_%H%M%S)/api/" 2>/dev/null
+    [ -f "src/traccar-backend/build.gradle" ] && cp "src/traccar-backend/build.gradle" ".backup/$(date +%Y%m%d_%H%M%S)/" 2>/dev/null
+    
+    echo "✅ Backup creado en .backup/"
+fi
+
 # Verificar si existe .env
 if [ ! -f .env ]; then
     echo "⚠️  No se encontró archivo .env. Creando uno básico..."

@@ -72,6 +72,7 @@ services:
     environment:
       - REACT_APP_API_URL=${TRACCAR_WEB_URL:-http://localhost:8082}
       - CHOKIDAR_USEPOLLING=true
+      - DOCKER_ENV=true
     networks:
       - traccar-network
     depends_on:

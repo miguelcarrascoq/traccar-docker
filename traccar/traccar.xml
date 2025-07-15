@@ -23,4 +23,7 @@
     <entry key="logger.enable">true</entry>
     <entry key="logger.level">INFO</entry>
     <entry key="logger.file">./logs/tracker-server.log</entry>
+    
+    <!-- Media Configuration -->
+    <entry key="media.path">./target/media</entry>
 </properties>
