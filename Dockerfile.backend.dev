@@ -8,6 +8,13 @@ RUN apk add --no-cache git
 # Create entrypoint script
 RUN cat > /entrypoint.sh << 'EOF'
 #!/bin/sh
+
+# Prevent infinite loop by checking if server is already running
+if pgrep -f "tracker-server.jar" > /dev/null; then
+    echo "📋 Servidor ya iniciado, mostrando logs..."
+    exec tail -f /opt/traccar/logs/tracker-server.log
+fi
+
 echo "🚀 Iniciando backend en modo desarrollo..."
 
 # Esperar a que el código fuente esté disponible
@@ -24,7 +31,19 @@ mkdir -p logs
 mkdir -p target/media
 
 echo "🌟 Iniciando servidor backend..."
-java -jar target/tracker-server.jar /opt/traccar/conf/traccar.xml
+# Start the server in background
+java -jar target/tracker-server.jar /opt/traccar/conf/traccar.xml &
+SERVER_PID=$!
+
+# Wait for the log file to be created
+while [ ! -f "/opt/traccar/logs/tracker-server.log" ]; do
+    sleep 1
+done
+
+echo "📋 Mostrando logs del servidor..."
+# Instead of waiting for the server process, tail the logs (this becomes the main process)
+# The server will continue running in the background
+exec tail -f /opt/traccar/logs/tracker-server.log
 EOF
 
 RUN chmod +x /entrypoint.sh

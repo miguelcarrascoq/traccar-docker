@@ -22,7 +22,7 @@
     <entry key="server.timeout">120</entry>
     <entry key="logger.enable">true</entry>
     <entry key="logger.level">INFO</entry>
-    <entry key="logger.file">./logs/tracker-server.log</entry>
+    <entry key="logger.file">/opt/traccar/logs/tracker-server.log</entry>
     
     <!-- Media Configuration -->
     <entry key="media.path">./target/media</entry>
