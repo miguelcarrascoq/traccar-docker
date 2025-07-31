@@ -228,6 +228,10 @@ docker compose down               # Stop
 # Stop development environment  
 ./stop-dev.sh
 
+# Rebuild containers
+docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.dev.yml up --build --force-recreate
+
 # View development logs
 docker compose -f docker-compose.dev.yml logs -f
 
