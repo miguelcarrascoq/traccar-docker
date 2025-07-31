@@ -20,26 +20,25 @@ RUN git config --global credential.helper store && \
 # Clone frontend to temporary location
 RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
         echo "Cloning frontend with credentials"; \
-        echo "https://$GIT_USERNAME:$GIT_PASSWORD@${GIT_FRONTEND_REPO_URL#https://}" > ~/.git-credentials && \
-        git clone --progress "$GIT_FRONTEND_REPO_URL" /tmp/frontend-source; \
+        git clone --progress "https://$GIT_USERNAME:$GIT_PASSWORD@${GIT_FRONTEND_REPO_URL#https://}" /tmp/frontend-source; \
     else \
         echo "Cloning public frontend repo"; \
         git clone --progress "$GIT_FRONTEND_REPO_URL" /tmp/frontend-source; \
     fi && \
     if [ -n "$GIT_FRONTEND_BRANCH" ]; then \
-        cd /tmp/frontend-source && git checkout $GIT_FRONTEND_BRANCH; \
+        cd /tmp/frontend-source && git checkout $GIT_FRONTEND_BRANCH && git pull origin $GIT_FRONTEND_BRANCH; \
     fi
 
 # Clone backend to temporary location
 RUN if [ -n "$GIT_USERNAME" ] && [ -n "$GIT_PASSWORD" ]; then \
         echo "Cloning backend with credentials"; \
-        git clone --progress "$GIT_BACKEND_REPO_URL" /tmp/backend-source; \
+        git clone --progress "https://$GIT_USERNAME:$GIT_PASSWORD@${GIT_BACKEND_REPO_URL#https://}" /tmp/backend-source; \
     else \
         echo "Cloning public backend repo"; \
         git clone --progress "$GIT_BACKEND_REPO_URL" /tmp/backend-source; \
     fi && \
     if [ -n "$GIT_BACKEND_BRANCH" ]; then \
-        cd /tmp/backend-source && git checkout $GIT_BACKEND_BRANCH; \
+        cd /tmp/backend-source && git checkout $GIT_BACKEND_BRANCH && git pull origin $GIT_BACKEND_BRANCH; \
     fi
 
 # Create entrypoint script
@@ -49,6 +48,18 @@ echo "🚀 Iniciando copia de código fuente..."
 
 # Esperar un poco para que los volúmenes estén listos
 sleep 2
+
+# Actualizar frontend desde remoto si existe .git y rama definida
+if [ -d "/tmp/frontend-source/.git" ] && [ -n "$GIT_FRONTEND_BRANCH" ]; then
+    echo "🔄 Actualizando frontend desde remoto ($GIT_FRONTEND_BRANCH)..."
+    cd /tmp/frontend-source && git checkout $GIT_FRONTEND_BRANCH && git pull origin $GIT_FRONTEND_BRANCH
+fi
+
+# Actualizar backend desde remoto si existe .git y rama definida
+if [ -d "/tmp/backend-source/.git" ] && [ -n "$GIT_BACKEND_BRANCH" ]; then
+    echo "🔄 Actualizando backend desde remoto ($GIT_BACKEND_BRANCH)..."
+    cd /tmp/backend-source && git checkout $GIT_BACKEND_BRANCH && git pull origin $GIT_BACKEND_BRANCH
+fi
 
 # Backup existing custom files if they exist
 if [ -d "/app/traccar-backend" ] && [ -f "/app/traccar-backend/build.gradle" ]; then
