@@ -19,8 +19,22 @@ while [ ! -f "/app/package.json" ]; do
     sleep 5
 done
 
+# Actualizar código fuente antes de instalar dependencias
+if [ -d ".git" ]; then
+    echo "🔄 Actualizando código fuente desde remoto..."
+    git pull
+fi
+
 echo "📦 Instalando dependencias..."
 npm install
+
+# Ejecutar lint antes de iniciar el servidor
+if npm run lint; then
+    echo "✅ Lint exitoso, iniciando servidor..."
+else
+    echo "❌ Error en lint. Deteniendo el proceso."
+    exit 1
+fi
 
 echo "🌟 Iniciando servidor de desarrollo..."
 npm start
