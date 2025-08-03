@@ -79,20 +79,18 @@ if [ -d "/app/traccar-backend" ] && [ -f "/app/traccar-backend/build.gradle" ]; 
     [ -f "/app/traccar-backend/build.gradle" ] && cp "/app/traccar-backend/build.gradle" "/tmp/custom-backup/" 2>/dev/null
 fi
 
-# Copiar frontend si el destino está vacío o es diferente
-if [ ! -f "/app/traccar-web/package.json" ] || [ -z "$(ls -A /app/traccar-web 2>/dev/null)" ]; then
-    echo "📥 Copiando código frontend..."
+# Copiar siempre el frontend actualizado, sobrescribiendo el destino
+    echo "📥 Copiando código frontend actualizado..."
     rsync -av --delete /tmp/frontend-source/ /app/traccar-web/
-    echo "✅ Frontend copiado a /app/traccar-web/"
+    echo "✅ Frontend actualizado y copiado a /app/traccar-web/"
 else
     echo "⚠️  Frontend ya existe en /app/traccar-web/ - conservando cambios locales"
 fi
 
-# Copiar backend si el destino está vacío o es diferente
-if [ ! -f "/app/traccar-backend/build.gradle" ] || [ -z "$(ls -A /app/traccar-backend 2>/dev/null)" ]; then
-    echo "📥 Copiando código backend..."
+# Copiar siempre el backend actualizado, sobrescribiendo el destino
+    echo "📥 Copiando código backend actualizado..."
     rsync -av --delete /tmp/backend-source/ /app/traccar-backend/
-    echo "✅ Backend copiado a /app/traccar-backend/"
+    echo "✅ Backend actualizado y copiado a /app/traccar-backend/"
 else
     echo "⚠️  Backend ya existe en /app/traccar-backend/ - conservando cambios locales"
 fi
