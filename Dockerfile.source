@@ -53,6 +53,13 @@ sleep 2
 if [ -d "/tmp/frontend-source/.git" ] && [ -n "$GIT_FRONTEND_BRANCH" ]; then
     echo "🔄 Actualizando frontend desde remoto ($GIT_FRONTEND_BRANCH)..."
     cd /tmp/frontend-source && git checkout $GIT_FRONTEND_BRANCH && git pull origin $GIT_FRONTEND_BRANCH
+    echo "🔍 Ejecutando npm run lint en frontend..."
+    if npm run lint; then
+        echo "✅ Lint exitoso, continuando..."
+    else
+        echo "❌ Error en lint de frontend. Deteniendo el proceso."
+        exit 1
+    fi
 fi
 
 # Actualizar backend desde remoto si existe .git y rama definida
