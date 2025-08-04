@@ -37,3 +37,5 @@ Thumbs.db
 logs/
 
 .backup
+
+traccar/traccar-web-env/.env.custom
