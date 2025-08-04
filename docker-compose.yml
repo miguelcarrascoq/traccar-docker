@@ -69,6 +69,7 @@ services:
       - ./traccar/logs:/opt/traccar/logs:rw
       - ./traccar/traccar.xml:/opt/traccar/conf/traccar.xml:ro
       - ./traccar/data:/opt/traccar/data:rw
+      - ./traccar/traccar-web-env/.env.custom:/app/traccar-web-env/.env.custom:ro
     restart: unless-stopped
     networks:
       - traccar-network

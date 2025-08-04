@@ -28,6 +28,12 @@ fi
 echo "📦 Instalando dependencias..."
 npm install
 
+# Copiar archivo .env personalizado si existe en la nueva ruta
+if [ -f "/app/traccar-web-env/.env.custom" ]; then
+    cp /app/traccar-web-env/.env.custom /app/.env
+    echo "✅ Archivo .env personalizado copiado desde traccar-web-env"
+fi
+
 # Ejecutar lint antes de iniciar el servidor
 if npm run lint; then
     echo "✅ Lint exitoso, iniciando servidor..."
