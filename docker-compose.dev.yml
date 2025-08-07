@@ -102,6 +102,30 @@ services:
     networks:
       - traccar-network
 
+  # Swagger UI para documentación de API
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: traccar-swagger-ui
+    ports:
+      - "8083:8080"
+    environment:
+      API_URL: "/openapi.yaml"
+      SWAGGER_JSON: "/openapi.yaml"
+      URLS: '[{ "url": "/openapi.yaml", "name": "Traccar API" }]'
+      URLS_PRIMARY_NAME: "Traccar API"
+      SUPPORTED_SUBMIT_METHODS: '["get", "put", "post", "delete", "options", "head", "patch", "trace"]'
+      DEFAULT_MODELS_EXPAND_DEPTH: "1"
+      DEFAULT_MODEL_EXPAND_DEPTH: "1"
+      DISPLAY_REQUEST_DURATION: "true"
+      DISABLE_SWAGGER_DEFAULT_URL: "true"
+      DOC_EXPANSION: "list"
+    volumes:
+      - ./src/traccar-backend/openapi.yaml:/usr/share/nginx/html/openapi.yaml:ro
+    networks:
+      - traccar-network
+    depends_on:
+      - traccar-backend-dev
+      
 volumes:
   mysql_data:
 
