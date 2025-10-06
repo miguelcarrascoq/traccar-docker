@@ -29,6 +29,7 @@ echo "📦 Compilando proyecto con Gradle..."
 echo "📁 Creando directorios necesarios..."
 mkdir -p logs
 mkdir -p target/media
+mkdir -p web
 
 echo "🌟 Iniciando servidor backend..."
 # Start the server in background
