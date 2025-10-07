@@ -1,0 +1,99 @@
+services:
+  traccar-mysql-test:
+    image: mysql:8.0
+    container_name: traccar-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-traccar}
+      MYSQL_USER: ${MYSQL_USER:-traccar}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-traccar_password}
+    ports:
+      - "${MYSQL_TEST_PORT:-3307}:3306"
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+      - ./mysql-init-test:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    command: >
+      --default-authentication-plugin=caching_sha2_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    networks:
+      - traccar-test-network
+
+  # phpMyAdmin para gestión de base de datos de testing
+  phpmyadmin-test:
+    image: arm64v8/phpmyadmin:latest
+    container_name: traccar-phpmyadmin-test
+    environment:
+      PMA_HOST: traccar-mysql-test
+      PMA_PORT: 3306
+      PMA_USER: ${MYSQL_USER:-traccar}
+      PMA_PASSWORD: ${MYSQL_PASSWORD:-traccar_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    ports:
+      - "${PHPMYADMIN_TEST_PORT:-8081}:80"
+    depends_on:
+      - traccar-mysql-test
+    restart: unless-stopped
+    networks:
+      - traccar-test-network
+
+  # Backend en modo testing con base de datos separada
+  traccar-backend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.dev
+    container_name: traccar-backend-test
+    ports:
+      - "${BACKEND_TEST_PORT:-8084}:8082"
+      - "5000-5150:5000-5150"
+      - "5000-5150:5000-5150/udp"
+    volumes:
+      - ./src/traccar-backend:/app:rw
+      - ./traccar/logs-test:/opt/traccar/logs:rw
+      - ./traccar/traccar-test.xml:/opt/traccar/conf/traccar.xml:ro
+      - ./traccar/data-test:/opt/traccar/data:rw
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx1g -Djava.net.preferIPv4Stack=true
+    depends_on:
+      - traccar-mysql-test
+    networks:
+      - traccar-test-network
+
+  # Laravel application for testing
+  laravel-test:
+    image: php:8.2-fpm
+    container_name: laravel-test
+    working_dir: /var/www/html
+    volumes:
+      - ../interno-laravel:/var/www/html:rw
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=traccar-mysql-test
+      - DB_PORT=3306
+      - DB_DATABASE=traccar_test
+      - DB_USERNAME=traccar_test
+      - DB_PASSWORD=traccar_test_password
+    depends_on:
+      - traccar-mysql-test
+    networks:
+      - traccar-test-network
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y git unzip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev &&
+        docker-php-ext-configure gd --with-freetype --with-jpeg &&
+        docker-php-ext-install pdo pdo_mysql zip gd &&
+        curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer &&
+        composer install --no-dev --optimize-autoloader &&
+        php artisan migrate --force &&
+        php artisan test
+      "
+
+volumes:
+  mysql_test_data:
+
+networks:
+  traccar-test-network:
+    driver: bridge
