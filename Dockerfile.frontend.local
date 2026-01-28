@@ -1,0 +1,22 @@
+# Build frontend from local src/traccar-web (no clone).
+# Usar con: docker compose -f docker-compose.yml -f docker-compose.local.yml build traccar-frontend
+FROM node:20-alpine AS builder
+
+WORKDIR /build
+
+# Copiar código local (context = raíz del repo)
+COPY src/traccar-web/package*.json ./
+RUN npm ci --legacy-peer-deps
+
+COPY src/traccar-web/ ./
+RUN npm run build
+
+# Runtime con nginx
+FROM nginx:alpine
+
+COPY --from=builder /build/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 3000
+
+CMD ["nginx", "-g", "daemon off;"]

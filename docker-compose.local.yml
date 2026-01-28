@@ -1,0 +1,7 @@
+# Override para construir el frontend desde ./src/traccar-web (código local).
+# Uso: docker compose -f docker-compose.yml -f docker-compose.local.yml up -d
+services:
+  traccar-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.local

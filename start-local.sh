@@ -98,11 +98,17 @@ fi
 echo "🔍 PATH=$PATH"
 echo "🔍 docker-credential-desktop location: $(which docker-credential-desktop 2>/dev/null || echo 'not found in PATH')"
 
+# Usar código local en src/traccar-web si existe (evita error Firebase sin .env)
+COMPOSE_FILES="-f docker-compose.yml"
+if [ -d "src/traccar-web" ] && [ -f "docker-compose.local.yml" ]; then
+    COMPOSE_FILES="$COMPOSE_FILES -f docker-compose.local.yml"
+    echo "📁 Frontend se construirá desde ./src/traccar-web (código local)"
+fi
+
 if [[ "$DOCKER_COMPOSE_CMD" == *" "* ]]; then
-    # Command contains spaces, need to split it
-    eval "$DOCKER_COMPOSE_CMD up -d"
+    eval "$DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d --build"
 else
-    $DOCKER_COMPOSE_CMD up -d
+    $DOCKER_COMPOSE_CMD $COMPOSE_FILES up -d --build
 fi
 
 echo ""
@@ -117,6 +123,6 @@ echo ""
 echo "👤 Default Login: admin / admin"
 echo ""
 echo "📋 Management:"
-echo "   View logs: $DOCKER_COMPOSE_CMD logs -f"
-echo "   Stop: $DOCKER_COMPOSE_CMD down"
+echo "   View logs: $DOCKER_COMPOSE_CMD $COMPOSE_FILES logs -f"
+echo "   Stop: $DOCKER_COMPOSE_CMD $COMPOSE_FILES down"
 echo ""
