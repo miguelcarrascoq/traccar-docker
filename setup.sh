@@ -353,6 +353,12 @@ http {
         root /usr/share/nginx/html;
         index index.html;
 
+        # Archivos .kml públicos (rutas.kml, etc.)
+        location ~ \.kml\$ {
+            add_header Content-Type application/vnd.google-earth.kml+xml;
+            try_files \$uri =404;
+        }
+
         # Frontend
         location / {
             try_files \$uri \$uri/ /index.html;
