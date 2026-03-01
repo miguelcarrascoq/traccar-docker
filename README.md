@@ -15,6 +15,7 @@
 git clone https://github.com/miguelcarrascoq/traccar-docker.git
 cd traccar-docker
 ./start-local.sh
+# docker compose -f docker-compose.yml -f docker-compose.local.yml down
 ```
 
 ### Development Mode
